@@ -16,7 +16,7 @@ A full-stack machine learning web application that predicts California housing p
 
 ## 📸 Preview
 
-> A sleek dark-themed React interface where users adjust sliders for income, rooms, and occupancy to get an instant house price prediction powered by a containerized ML API
+> A sleek dark-themed React interface where users adjust sliders for income, rooms, and occupancy to get an instant house price prediction powered by a containerized ML API.
 
 ---
 
