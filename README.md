@@ -10,7 +10,7 @@ A full-stack machine learning web application that predicts California housing p
 ---
 
 ## 🔗 Live Demo
-👉 **[house-price-predictor.vercel.app](https://house-price-predictor.vercel.app)**
+👉 **https://penuuugreat-house-price-predictor.vercel.app/**
 
 ---
 
