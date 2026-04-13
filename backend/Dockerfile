@@ -5,16 +5,16 @@ FROM python:3.11-slim
 WORKDIR /code
 
 # Copy the requirements file
-COPY requirements.txt /code/requirements.txt
+COPY backend/requirements.txt /code/requirements.txt
 
 # Install the Python dependencies
 RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 
 # Copy the app folder into the container
-COPY app /code/app
+COPY backend/app /code/app
 
 # Copy the model directory (with the saved model file) into the container
-COPY model /code/model
+COPY backend/model /code/model
 
 # Expose port 8000 for FastAPI
 EXPOSE 8000
