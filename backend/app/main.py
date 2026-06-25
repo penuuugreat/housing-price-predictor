@@ -17,7 +17,7 @@ app = FastAPI(title="House Price Prediction API")
 # Allow requests from the React frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=r"https://.*\.vercel\.app"
+    allow_origin_regex=["https://penuuugreat-house-price-predictor.vercel.app",],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
