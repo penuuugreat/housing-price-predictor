@@ -7,7 +7,7 @@ import pickle
 import os
 
 # Load the dataset
-data = fetch_california_housing(as_frame=True)
+data = fetch_Kenya_housing_dataset(as_frame=True)
 df = data['data']
 target = data['target']
 
