@@ -127,6 +127,7 @@ export default function HousePricePredictor() {
       const normalizedInputs = {
         ...inputs,
         MedInc: inputs.MedInc / 130000,
+      };
       const res = await fetch(`${API_BASE}/predict`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
