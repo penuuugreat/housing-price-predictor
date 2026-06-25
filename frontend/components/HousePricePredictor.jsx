@@ -2,10 +2,18 @@ import { useState, useEffect } from "react";
 
 const API_BASE = "https://housing-price-predictor-wlvr.onrender.com";
 
-const formatCurrency = (val) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(val * 100000);
+// Kenya counties with model encoding
+const COUNTIES = [
+  { label: "Nairobi", value: 2 },
+  { label: "Mombasa", value: 1 },
+  { label: "Nakuru", value: 3 },
+  { label: "Kisumu", value: 0 },
+];
 
-const SliderInput = ({ label, name, min, max, step, value, onChange, description, unit }) => {
+const formatKsh = (val) =>
+  "KSh " + new Intl.NumberFormat("en-KE", { maximumFractionDigits: 0 }).format(val);
+
+const SliderInput = ({ label, name, min, max, step, value, onChange, description }) => {
   const pct = ((value - min) / (max - min)) * 100;
   return (
     <div style={{ marginBottom: "2rem" }}>
@@ -14,11 +22,11 @@ const SliderInput = ({ label, name, min, max, step, value, onChange, description
           {label}
         </label>
         <span style={{
-          fontFamily: "'DM Mono', monospace", fontSize: "1.1rem", fontWeight: "600",
+          fontFamily: "'DM Mono', monospace", fontSize: "1rem", fontWeight: "600",
           color: "#e8c97a", background: "rgba(232,201,122,0.1)", padding: "2px 10px",
           borderRadius: "4px", border: "1px solid rgba(232,201,122,0.25)"
         }}>
-          {value}{unit}
+          {formatKsh(value)}
         </span>
       </div>
       <p style={{ fontSize: "0.72rem", color: "#7a6f5e", marginBottom: "0.6rem", fontFamily: "'DM Sans', sans-serif" }}>
@@ -48,8 +56,8 @@ const SliderInput = ({ label, name, min, max, step, value, onChange, description
         }} />
       </div>
       <div style={{ display: "flex", justifyContent: "space-between", marginTop: "0.3rem" }}>
-        <span style={{ fontSize: "0.65rem", color: "#4a4035", fontFamily: "'DM Mono', monospace" }}>{min}</span>
-        <span style={{ fontSize: "0.65rem", color: "#4a4035", fontFamily: "'DM Mono', monospace" }}>{max}</span>
+        <span style={{ fontSize: "0.65rem", color: "#4a4035", fontFamily: "'DM Mono', monospace" }}>{formatKsh(min)}</span>
+        <span style={{ fontSize: "0.65rem", color: "#4a4035", fontFamily: "'DM Mono', monospace" }}>{formatKsh(max)}</span>
       </div>
     </div>
   );
@@ -65,7 +73,8 @@ const Particle = ({ style }) => (
 );
 
 export default function HousePricePredictor() {
-  const [inputs, setInputs] = useState({ MedInc: 5.0, AveRooms: 5.0, AveOccup: 3.0 });
+  const [county, setCounty] = useState(2);
+  const [income, setIncome] = useState(50000);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -84,9 +93,7 @@ export default function HousePricePredictor() {
         from { opacity: 0; transform: translateY(20px); }
         to { opacity: 1; transform: translateY(0); }
       }
-      @keyframes pulse {
-        0%, 100% { opacity: 1; } 50% { opacity: 0.4; }
-      }
+      @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
       @keyframes shimmer {
         0% { background-position: -200% center; }
         100% { background-position: 200% center; }
@@ -102,21 +109,14 @@ export default function HousePricePredictor() {
   }, []);
 
   const checkHealth = async () => {
-  setApiStatus("checking");
-  for (let i = 0; i < 4; i++) {
     try {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 20000); 
-      const res = await fetch(`${API_BASE}/`, { signal: controller.signal });
-      clearTimeout(timer);
-      if (res.ok) { setApiStatus("online"); return; }
-    } catch {}
-    if (i < 3) await new Promise(r => setTimeout(r, 8000)); 
-  }
-  setApiStatus("offline");
-};
-
-  const handleChange = (name, val) => setInputs(prev => ({ ...prev, [name]: val }));
+      const res = await fetch(`${API_BASE}/`);
+      if (res.ok) setApiStatus("online");
+      else setApiStatus("offline");
+    } catch {
+      setApiStatus("offline");
+    }
+  };
 
   const handlePredict = async () => {
     setLoading(true);
@@ -127,11 +127,11 @@ export default function HousePricePredictor() {
       const res = await fetch(`${API_BASE}/predict`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(inputs),
+        body: JSON.stringify({ county, monthly_income_ksh: income }),
       });
       if (!res.ok) throw new Error(`Server error: ${res.status}`);
       const data = await res.json();
-      setResult(data.predicted_house_price);
+      setResult(data.predicted_monthly_rent_ksh);
       setTimeout(() => setRevealed(true), 100);
     } catch (err) {
       setError(err.message);
@@ -140,14 +140,15 @@ export default function HousePricePredictor() {
     }
   };
 
-  const confidenceLabel = (price) => {
-    if (price < 1.5) return { label: "Below Market", color: "#6b9fd4" };
-    if (price < 3.0) return { label: "Mid Range", color: "#7dba7d" };
-    if (price < 5.0) return { label: "Premium", color: "#e8c97a" };
+  const rentTier = (rent) => {
+    if (rent < 10000) return { label: "Low Cost Housing", color: "#6b9fd4" };
+    if (rent < 30000) return { label: "Mid Range", color: "#7dba7d" };
+    if (rent < 70000) return { label: "Premium", color: "#e8c97a" };
     return { label: "Luxury", color: "#d4829a" };
   };
 
-  const tier = result !== null ? confidenceLabel(result) : null;
+  const tier = result !== null ? rentTier(result) : null;
+  const selectedCounty = COUNTIES.find(c => c.value === county);
 
   return (
     <div style={{
@@ -156,12 +157,10 @@ export default function HousePricePredictor() {
       padding: "2rem", position: "relative", overflow: "hidden",
       fontFamily: "'DM Sans', sans-serif"
     }}>
-      {/* Ambient particles */}
       <Particle style={{ width: 300, height: 300, top: "-5%", right: "10%", animationDelay: "0s" }} />
       <Particle style={{ width: 200, height: 200, bottom: "10%", left: "5%", animationDelay: "3s" }} />
       <Particle style={{ width: 150, height: 150, top: "50%", right: "5%", animationDelay: "5s" }} />
 
-      {/* Grain texture overlay */}
       <div style={{
         position: "fixed", inset: 0, pointerEvents: "none", zIndex: 1,
         backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E\")",
@@ -190,12 +189,12 @@ export default function HousePricePredictor() {
             fontWeight: 700, color: "#f0e6cc",
             margin: 0, lineHeight: 1.1, letterSpacing: "-0.02em"
           }}>
-            House Price
+            Kenya Rental
             <br />
             <em style={{ color: "#e8c97a", fontStyle: "italic" }}>Oracle</em>
           </h1>
           <p style={{ color: "#5a5040", fontSize: "0.85rem", marginTop: "0.8rem", letterSpacing: "0.04em" }}>
-            California Housing · Linear Regression Model
+            Nairobi · Mombasa · Nakuru · Kisumu · Random Forest Model
           </p>
         </div>
 
@@ -208,49 +207,70 @@ export default function HousePricePredictor() {
           boxShadow: "0 30px 80px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)",
           animation: "fadeSlideUp 0.8s 0.2s ease both"
         }}>
+
+          {/* County Selector */}
+          <div style={{ marginBottom: "2rem" }}>
+            <label style={{ fontFamily: "'Playfair Display', serif", fontSize: "1rem", color: "#d4c5a9", display: "block", marginBottom: "0.4rem" }}>
+              County
+            </label>
+            <p style={{ fontSize: "0.72rem", color: "#7a6f5e", marginBottom: "0.8rem", fontFamily: "'DM Sans', sans-serif" }}>
+              Select the county where the property is located
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
+              {COUNTIES.map(c => (
+                <button
+                  key={c.value}
+                  onClick={() => setCounty(c.value)}
+                  style={{
+                    padding: "0.6rem 1rem",
+                    background: county === c.value ? "rgba(232,201,122,0.15)" : "rgba(255,255,255,0.03)",
+                    border: county === c.value ? "1px solid rgba(232,201,122,0.5)" : "1px solid rgba(255,255,255,0.08)",
+                    borderRadius: "8px",
+                    color: county === c.value ? "#e8c97a" : "#5a5040",
+                    fontFamily: "'DM Mono', monospace",
+                    fontSize: "0.85rem",
+                    cursor: "pointer",
+                    transition: "all 0.2s"
+                  }}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Income Slider */}
           <SliderInput
-            label="Median Income" name="MedInc"
-            min={0.5} max={15} step={0.1} value={inputs.MedInc}
-            onChange={handleChange} unit="×$10k"
-            description="Median income of households in the block group"
-          />
-          <SliderInput
-            label="Average Rooms" name="AveRooms"
-            min={1} max={15} step={0.1} value={inputs.AveRooms}
-            onChange={handleChange} unit=" rooms"
-            description="Average number of rooms per household"
-          />
-          <SliderInput
-            label="Average Occupancy" name="AveOccup"
-            min={1} max={10} step={0.1} value={inputs.AveOccup}
-            onChange={handleChange} unit=" people"
-            description="Average number of occupants per household"
+            label="Monthly Household Income"
+            name="monthly_income_ksh"
+            min={10000} max={300000} step={5000}
+            value={income}
+            onChange={(_, val) => setIncome(val)}
+            description="Average monthly income of households in the area (KSh)"
           />
 
           {/* Predict Button */}
           <button
             onClick={handlePredict}
-            disabled={loading || apiStatus === "offline"}
+            disabled={loading}
             style={{
               width: "100%", padding: "1rem",
               background: loading
                 ? "rgba(232,201,122,0.15)"
                 : "linear-gradient(135deg, #8b6914 0%, #e8c97a 50%, #c9a84c 100%)",
-              backgroundSize: loading ? "auto" : "200% auto",
+              backgroundSize: "200% auto",
               border: "none", borderRadius: "10px",
               color: loading ? "#e8c97a" : "#1a1205",
               fontFamily: "'Playfair Display', serif",
               fontSize: "1rem", fontWeight: 700, letterSpacing: "0.08em",
-              cursor: loading || apiStatus === "offline" ? "not-allowed" : "pointer",
+              cursor: loading ? "not-allowed" : "pointer",
               transition: "all 0.3s ease",
               boxShadow: loading ? "none" : "0 4px 20px rgba(232,201,122,0.3)",
-              animation: loading ? "shimmer 1.5s linear infinite" : "none",
-              opacity: apiStatus === "offline" ? 0.4 : 1,
             }}
             onMouseEnter={e => { if (!loading) e.currentTarget.style.backgroundPosition = "right center"; }}
             onMouseLeave={e => { if (!loading) e.currentTarget.style.backgroundPosition = "left center"; }}
           >
-            {loading ? "Consulting the Model..." : "Predict Price →"}
+            {loading ? "Consulting the Model..." : "Predict Rent →"}
           </button>
         </div>
 
@@ -279,7 +299,7 @@ export default function HousePricePredictor() {
             boxShadow: "0 20px 60px rgba(232,201,122,0.08)"
           }}>
             <p style={{ color: "#5a5040", fontSize: "0.72rem", fontFamily: "'DM Mono', monospace", letterSpacing: "0.15em", textTransform: "uppercase", margin: "0 0 0.5rem" }}>
-              Estimated Value
+              Estimated Monthly Rent · {selectedCounty?.label}
             </p>
             <div style={{
               fontFamily: "'Playfair Display', serif",
@@ -288,7 +308,7 @@ export default function HousePricePredictor() {
               animation: "countUp 0.5s 0.2s ease both", opacity: 0,
               animationFillMode: "forwards"
             }}>
-              {formatCurrency(result)}
+              {formatKsh(result)}
             </div>
             <div style={{ marginTop: "1rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
               <div style={{ width: 6, height: 6, borderRadius: "50%", background: tier.color }} />
@@ -297,14 +317,14 @@ export default function HousePricePredictor() {
               </span>
             </div>
             <p style={{ color: "#3a3025", fontSize: "0.7rem", marginTop: "1rem", fontFamily: "'DM Mono', monospace" }}>
-              Raw model output: {result.toFixed(4)} × $100K
+              per month
             </p>
           </div>
         )}
 
         {/* Footer */}
         <p style={{ textAlign: "center", color: "#2a2520", fontSize: "0.65rem", marginTop: "2rem", fontFamily: "'DM Mono', monospace", letterSpacing: "0.05em" }}>
-          Powered by FastAPI · scikit-learn · California Housing Dataset
+          Powered by FastAPI · scikit-learn · Kenya Housing Data
         </p>
       </div>
     </div>
