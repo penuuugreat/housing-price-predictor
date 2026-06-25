@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-const API_BASE = (import.meta.env.VITE_API_BASE_URL || "https://housing-price-predictor-wlvr.onrender.com").replace(/\/$/, "");
+const API_BASE = "https://housing-price-predictor-wlvr.onrender.com";
 
 const formatCurrency = (val) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(val * 100000);
