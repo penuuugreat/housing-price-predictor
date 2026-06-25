@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 const API_BASE = "https://housing-price-predictor-wlvr.onrender.com";
 
 const formatCurrency = (val) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(val * 100000);
+  new Intl.NumberFormat("en-KE", { style: "currency", currency: "KES", maximumFractionDigits: 0 }).format(val * 100000);
 
 const SliderInput = ({ label, name, min, max, step, value, onChange, description, unit }) => {
   const pct = ((value - min) / (max - min)) * 100;
