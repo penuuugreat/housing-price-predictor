@@ -1,55 +1,39 @@
 # app/main.py
-from fastapi import FastAPI, Query
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import pickle
 import os
 
-# Define the input data schema using Pydantic
 class InputData(BaseModel):
-    MedInc: float
-    AveRooms: float
-    AveOccup: float
+    county: int          # encoded: Kisumu=0, Mombasa=1, Nairobi=2, Nakuru=3
+    monthly_income_ksh: float
 
-# Initialize FastAPI app
-app = FastAPI(title="House Price Prediction API")
+app = FastAPI(title="Kenya House Rent Prediction API")
 
-# Allow requests from the React frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173","https://penuuugreat-house-price-predictor.vercel.app",],
-    allow_credentials=True,
+    allow_origins=[
+        "http://localhost:5173",
+        "https://penuuugreat-house-price-predictor.vercel.app",
+    ],
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Load the model during startup
-model_path = os.path.join("model", "linear_regression_model.pkl")
-with open(model_path, 'rb') as f:
+# Load model and encoder
+base = os.path.dirname(__file__)
+with open(os.path.join(base, "..", "model", "kenya_rent_model.pkl"), "rb") as f:
     model = pickle.load(f)
 
 @app.get("/")
 def health_check():
-    return {"status": "API is running", "service": "House Price Prediction API"}
+    return {"status": "API is running", "service": "Kenya House Rent Prediction API"}
 
 @app.post("/predict")
-def predict_post(data: InputData):
-    # Prepare the data for prediction
-    input_features = [[data.MedInc, data.AveRooms, data.AveOccup]]
-    
-    # Make prediction using the loaded model
-    prediction = model.predict(input_features)
-    
-    # Return the prediction result
-    return {"predicted_house_price": prediction[0]}
-
-@app.get("/predict")
-def predict_get(MedInc: float = Query(...), AveRooms: float = Query(...), AveOccup: float = Query(...)):
-    # Prepare the data for prediction
-    input_features = [[MedInc, AveRooms, AveOccup]]
-    
-    # Make prediction using the loaded model
-    prediction = model.predict(input_features)
-    
-    # Return the prediction result
-    return {"predicted_house_price": prediction[0]}
+def predict(data: InputData):
+    features = [[data.county, data.monthly_income_ksh]]
+    prediction = model.predict(features)
+    return {
+        "predicted_monthly_rent_ksh": round(float(prediction[0]), -2)  # round to nearest 100
+    }
