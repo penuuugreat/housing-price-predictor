@@ -102,14 +102,19 @@ export default function HousePricePredictor() {
   }, []);
 
   const checkHealth = async () => {
+  setApiStatus("checking");
+  for (let i = 0; i < 4; i++) {
     try {
-      const res = await fetch(`${API_BASE}/`);
-      if (res.ok) setApiStatus("online");
-      else setApiStatus("offline");
-    } catch {
-      setApiStatus("offline");
-    }
-  };
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 20000); 
+      const res = await fetch(`${API_BASE}/`, { signal: controller.signal });
+      clearTimeout(timer);
+      if (res.ok) { setApiStatus("online"); return; }
+    } catch {}
+    if (i < 3) await new Promise(r => setTimeout(r, 8000)); 
+  }
+  setApiStatus("offline");
+};
 
   const handleChange = (name, val) => setInputs(prev => ({ ...prev, [name]: val }));
 
