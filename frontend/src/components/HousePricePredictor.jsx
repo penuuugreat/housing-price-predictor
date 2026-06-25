@@ -124,6 +124,9 @@ export default function HousePricePredictor() {
     setResult(null);
     setRevealed(false);
     try {
+      const normalizedInputs = {
+        ...inputs,
+        MedInc: inputs.MedInc / 130000,
       const res = await fetch(`${API_BASE}/predict`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -208,10 +211,10 @@ const confidenceLabel = (price) => {
           animation: "fadeSlideUp 0.8s 0.2s ease both"
         }}>
           <SliderInput
-            label="Median Income" name="MedInc"
-            min={0.5} max={15} step={0.1} value={inputs.MedInc}
+            label="Median MIncome" name="MedInc"
+            min={10000} max={500000} step={5000} value={inputs.MedInc}
             onChange={handleChange} unit="Ksh"
-            description="Median income of households in the block group"
+            description="Median monthly household income in the area"
           />
           <SliderInput
             label="Average Rooms" name="AveRooms"
