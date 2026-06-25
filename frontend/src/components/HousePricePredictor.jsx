@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 const API_BASE = "https://housing-price-predictor-wlvr.onrender.com";
 
 const formatCurrency = (val) =>
-  new Intl.NumberFormat("en-KE", { style: "currency", currency: "KES", maximumFractionDigits: 0 }).format(val * 100000);
+  new Intl.NumberFormat("en-KE", { style: "currency", currency: "KES", maximumFractionDigits: 0 }).format(val * 1000000);
 
 const SliderInput = ({ label, name, min, max, step, value, onChange, description, unit }) => {
   const pct = ((value - min) / (max - min)) * 100;
@@ -65,7 +65,7 @@ const Particle = ({ style }) => (
 );
 
 export default function HousePricePredictor() {
-  const [inputs, setInputs] = useState({ MedInc: 5.0, AveRooms: 5.0, AveOccup: 3.0 });
+  const [inputs, setInputs] = useState({ MedInc: 50000, AveRooms: 4, AveOccup: 3.0 });
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -140,13 +140,12 @@ export default function HousePricePredictor() {
     }
   };
 
-  const confidenceLabel = (price) => {
-    if (price < 1.5) return { label: "Below Market", color: "#6b9fd4" };
-    if (price < 3.0) return { label: "Mid Range", color: "#7dba7d" };
-    if (price < 5.0) return { label: "Premium", color: "#e8c97a" };
-    return { label: "Luxury", color: "#d4829a" };
-  };
-
+const confidenceLabel = (price) => {
+  if (price < 2) return { label: "Low Cost Housing", color: "#6b9fd4" };
+  if (price < 8) return { label: "Mid Range", color: "#7dba7d" };
+  if (price < 20) return { label: "Premium", color: "#e8c97a" };
+  return { label: "Luxury", color: "#d4829a" };
+};
   const tier = result !== null ? confidenceLabel(result) : null;
 
   return (
@@ -211,7 +210,7 @@ export default function HousePricePredictor() {
           <SliderInput
             label="Median Income" name="MedInc"
             min={0.5} max={15} step={0.1} value={inputs.MedInc}
-            onChange={handleChange} unit="×$10k"
+            onChange={handleChange} unit="Ksh"
             description="Median income of households in the block group"
           />
           <SliderInput
