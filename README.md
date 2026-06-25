@@ -1,6 +1,6 @@
-# 🏠 House Price Predictor
+# 🏠 Kenya Rental Oracle
 
-A full-stack machine learning web application that predicts California housing prices in real time using a Linear Regression model.
+A full-stack machine learning web application that predicts monthly residential rent across major Kenyan counties in real time, using a Random Forest model trained on Kenya housing data.
 
 ![Tech Stack](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)
 ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
@@ -16,7 +16,7 @@ A full-stack machine learning web application that predicts California housing p
 
 ## 📸 Preview
 
-> A sleek dark-themed React interface where users adjust sliders for income, rooms, and occupancy to get an instant house price prediction powered by a containerized ML API
+> A sleek dark-themed React interface styled as a "Rental Oracle" — users select a Kenyan county and adjust a monthly income slider to instantly receive a predicted monthly rent, with tier labeling (Low Cost, Mid Range, Premium, Luxury) powered by a containerized ML API.
 
 ---
 
@@ -24,35 +24,40 @@ A full-stack machine learning web application that predicts California housing p
 
 | Layer | Technology |
 |---|---|
-| Frontend | React, Vite |
+| Frontend | React 19, Vite 8 |
 | Backend | FastAPI, Python |
-| ML Model | Linear Regression (scikit-learn) |
-| Dataset | California Housing Dataset |
-| Containerization | Docker |
+| ML Model | Random Forest (scikit-learn) |
+| Dataset | Kenya Housing / Rental Data |
+| Containerization | Docker, Docker Compose |
 | Frontend Hosting | Vercel |
 | Backend Hosting | Render |
+| Cloud Deployment | Azure Container Instances (optional) |
 
 ---
 
 ## 📁 Project Structure
 
 ```
-house-price-predictor/
+housing-price-predictor/
 ├── backend/
 │   ├── app/
-│   │   └── main.py          # FastAPI app with /predict endpoint
+│   │   └── main.py               # FastAPI app with /predict endpoint
 │   ├── model/
-│   │   └── linear_regression_model.pkl
+│   │   └── kenya_rent_model.pkl  # Trained Random Forest model
 │   ├── requirements.txt
 │   └── Dockerfile
 ├── frontend/
 │   ├── src/
 │   │   ├── components/
-│   │   │   └── HousePricePredictor.jsx
+│   │   │   └── HousePricePredictor.jsx  # Main UI component
 │   │   ├── App.jsx
 │   │   └── main.jsx
 │   ├── package.json
 │   └── vite.config.js
+├── model_training.py             # Model training script
+├── docker-compose.yml
+├── deploy-to-azure.ps1           # Azure ACI deployment script
+├── AZURE_DEPLOYMENT_GUIDE.md
 └── README.md
 ```
 
@@ -60,31 +65,55 @@ house-price-predictor/
 
 ## ⚙️ How It Works
 
-1. User adjusts 3 input sliders on the React frontend:
-   - **Median Income** — household income in the block group
-   - **Average Rooms** — average number of rooms per household
-   - **Average Occupancy** — average number of occupants per household
-2. The frontend sends a `POST` request to the FastAPI backend
-3. The backend feeds the inputs into the trained Linear Regression model
-4. The predicted house price is returned and displayed instantly
+1. The user selects a **county** and adjusts the **monthly household income** slider on the React frontend.
+2. The frontend sends a `POST` request to the FastAPI backend.
+3. The backend feeds the inputs into the trained Random Forest model (`kenya_rent_model.pkl`).
+4. The predicted monthly rent (in KSh, rounded to the nearest 100) is returned and displayed instantly, along with a housing tier classification.
+
+### County Encoding
+
+| County | Encoded Value |
+|---|---|
+| Kisumu | 0 |
+| Mombasa | 1 |
+| Nairobi | 2 |
+| Nakuru | 3 |
+
+### Rent Tier Classification (Frontend)
+
+| Monthly Rent | Tier |
+|---|---|
+| Below KSh 10,000 | Low Cost Housing |
+| KSh 10,000 – 29,999 | Mid Range |
+| KSh 30,000 – 69,999 | Premium |
+| KSh 70,000+ | Luxury |
 
 ---
 
 ## 🚀 Run Locally
 
 ### Prerequisites
-- Docker Desktop installed
-- Node.js installed
+- Docker Desktop installed and running
+- Node.js (v18+) installed
 
-### Backend
+### Option 1 — Docker Compose (Full Stack)
+```bash
+docker-compose up --build
+```
+- Backend API: `http://localhost:8000`
+- Frontend app: `http://localhost:5173`
+
+### Option 2 — Manual Setup
+
+**Backend**
 ```bash
 cd backend
-docker build -t house-price-api .
-docker run -p 8000:8000 house-price-api
+docker build -t kenya-rent-api .
+docker run -p 8000:8000 kenya-rent-api
 ```
 API will be live at: `http://localhost:8000`
 
-### Frontend
+**Frontend**
 ```bash
 cd frontend
 npm install
@@ -94,30 +123,62 @@ App will be live at: `http://localhost:5173`
 
 ---
 
-## 📡 API Endpoints
+## 📡 API Reference
 
 | Method | Endpoint | Description |
 |---|---|---|
 | GET | `/` | Health check |
-| POST | `/predict` | Predict house price |
-| GET | `/predict?MedInc=&AveRooms=&AveOccup=` | Predict via query params |
+| POST | `/predict` | Predict monthly rent |
 
-### Example Request
+### Request Body
 ```json
 POST /predict
 {
-  "MedInc": 5.0,
-  "AveRooms": 6.0,
-  "AveOccup": 3.0
+  "county": 2,
+  "monthly_income_ksh": 50000
 }
 ```
+
+| Field | Type | Description |
+|---|---|---|
+| `county` | `int` | Encoded county value (0=Kisumu, 1=Mombasa, 2=Nairobi, 3=Nakuru) |
+| `monthly_income_ksh` | `float` | Monthly household income in Kenyan Shillings |
 
 ### Example Response
 ```json
 {
-  "predicted_house_price": 2.345
+  "predicted_monthly_rent_ksh": 25000
 }
 ```
+> Predictions are rounded to the nearest KSh 100.
+
+---
+
+## 🧠 Model Training
+
+To retrain the model, run:
+```bash
+python model_training.py
+```
+This will output a new `kenya_rent_model.pkl` into `backend/model/`.
+
+> **Note:** The current `model_training.py` references a Kenya housing dataset. Ensure your local dataset is available before retraining.
+
+---
+
+## ☁️ Azure Deployment
+
+A fully automated PowerShell deployment script is included for deploying the backend to **Azure Container Instances (ACI)**.
+
+```powershell
+.\deploy-to-azure.ps1
+```
+
+See [AZURE_DEPLOYMENT_GUIDE.md](./AZURE_DEPLOYMENT_GUIDE.md) for full instructions, including:
+- Prerequisites (Azure CLI, Docker Desktop)
+- Customising resource group, registry, and region
+- Cost estimates (fits within ACI free tier for typical use)
+- Managing, monitoring, and tearing down the deployment
 
 ---
 
