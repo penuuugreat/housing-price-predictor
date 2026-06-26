@@ -19,6 +19,14 @@ const PROPERTY_TYPES = [
   { label: "Standalone", value: 4 },
 ];
 
+const BEDROOMS = [
+  { label: "Studio", value: 0 },
+  { label: "1 Bed", value: 1 },
+  { label: "2 Beds", value: 2 },
+  { label: "3 Beds", value: 3 },
+  { label: "4+ Beds", value: 4 },
+];
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const fmt = (val) =>
