@@ -1,0 +1,26 @@
+{
+  "counties": {
+    "0": "Kisumu",
+    "1": "Mombasa",
+    "2": "Nairobi",
+    "3": "Nakuru",
+    "4": "Kiambu",
+    "5": "Eldoret",
+    "6": "Thika",
+    "7": "Machakos"
+  },
+  "property_types": {
+    "0": "Bedsitter",
+    "1": "1 Bedroom",
+    "2": "2 Bedroom",
+    "3": "3 Bedroom",
+    "4": "Standalone"
+  },
+  "feature_importances": {
+    "county": 6.8,
+    "monthly_income_ksh": 51.2,
+    "property_type": 42.0
+  },
+  "mae_ksh": 7395,
+  "r2": 0.9167
+}
