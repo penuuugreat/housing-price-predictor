@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 
 const API_BASE = "https://housing-price-predictor-wlvr.onrender.com";
 
-// ─── Data ────────────────────────────────────────────────────────────────────
 
 const COUNTIES = [
   { label: "Nairobi", value: 2 },
@@ -19,15 +18,6 @@ const PROPERTY_TYPES = [
   { label: "Standalone", value: 4 },
 ];
 
-const BEDROOMS = [
-  { label: "Studio", value: 0 },
-  { label: "1 Bed", value: 1 },
-  { label: "2 Beds", value: 2 },
-  { label: "3 Beds", value: 3 },
-  { label: "4+ Beds", value: 4 },
-];
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const fmt = (val) =>
   "KSh " + new Intl.NumberFormat("en-KE", { maximumFractionDigits: 0 }).format(val);
@@ -251,7 +241,6 @@ export default function HousePricePredictor() {
   const [county, setCounty] = useState(2);
   const [income, setIncome] = useState(50000);
   const [propertyType, setPropertyType] = useState(1);
-  const [bedrooms, setBedrooms] = useState(1);
 
   const [result, setResult] = useState(null);
   const [comparisons, setComparisons] = useState(null);
@@ -305,12 +294,12 @@ export default function HousePricePredictor() {
         fetch(`${API_BASE}/predict`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ county, monthly_income_ksh: income, property_type: propertyType, bedrooms }),
+          body: JSON.stringify({ county, monthly_income_ksh: income, property_type: propertyType }),
         }),
         fetch(`${API_BASE}/compare`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ monthly_income_ksh: income, property_type: propertyType, bedrooms }),
+          body: JSON.stringify({ monthly_income_ksh: income, property_type: propertyType }),
         }),
       ]);
 
@@ -423,15 +412,6 @@ export default function HousePricePredictor() {
             options={PROPERTY_TYPES}
             value={propertyType}
             onChange={setPropertyType}
-          />
-
-          {/* Bedrooms */}
-          <PillSelector
-            label="Bedrooms"
-            description="Number of bedrooms in the property"
-            options={BEDROOMS}
-            value={bedrooms}
-            onChange={setBedrooms}
           />
 
           {/* Income Slider */}
