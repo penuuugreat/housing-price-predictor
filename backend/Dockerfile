@@ -1,23 +1,19 @@
-# Use Python 3.11 as the base image
 FROM python:3.11-slim
 
-# Set the working directory inside the container
 WORKDIR /code
 
-# Copy the requirements file
+# Install dependencies first (layer cache)
 COPY backend/requirements.txt /code/requirements.txt
-
-# Install the Python dependencies
 RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 
-# Copy the app folder into the container
+# Copy app source
 COPY backend/app /code/app
 
-# Copy the model directory (with the saved model file) into the container
-COPY backend/model /code/model
+# Copy retrain script and run it at build time.
+# This produces kenya_rent_model.pkl + model_meta.json using the exact
+# sklearn version installed above — no more InconsistentVersionWarning.
+COPY retrain.py /code/retrain.py
+RUN python /code/retrain.py
 
-# Expose port 8000 for FastAPI
 EXPOSE 8000
-
-# Start the FastAPI app
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
