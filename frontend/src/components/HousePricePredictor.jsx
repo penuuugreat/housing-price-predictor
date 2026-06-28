@@ -263,7 +263,7 @@ export default function HousePricePredictor() {
             </span>
           </div>
           <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(2rem, 5vw, 2.8rem)", fontWeight: 700, color: "#f0e6cc", margin: 0, lineHeight: 1.1, letterSpacing: "-0.02em" }}>
-            Kenya Rental<br /><em style={{ color: "#e8c97a", fontStyle: "italic" }}>Oracle</em>
+            RentRadar Kenya<br />
           </h1>
           <p style={{ color: "#5a5040", fontSize: "0.82rem", marginTop: "0.8rem", letterSpacing: "0.04em" }}>
             8 Counties · 5 Property Types · Random Forest Model
