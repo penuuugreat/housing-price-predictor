@@ -19,9 +19,7 @@ with open(os.path.join(model_dir, "model_meta.json")) as f:
 
 COUNTIES        = {int(k): v for k, v in META["counties"].items()}
 PROPERTY_TYPES  = {int(k): v for k, v in META["property_types"].items()}
-FEAT_IMPORTANCE = META["feature_importances_pct"]   # {"county": 6.8, ...}
-
-# ─── Input schemas ────────────────────────────────────────────────────────────
+FEAT_IMPORTANCE = META.get("feature_importances_pct") or META.get("feature_importances", {})
 
 class InputData(BaseModel):
     county: int                        # 0–7 (see COUNTIES)
@@ -45,7 +43,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ─── Helpers ──────────────────────────────────────────────────────────────────
 
 def predict_rent(county: int, income: float, property_type: int) -> float:
     """Run model inference. property_type is now a first-class feature."""
@@ -58,6 +55,7 @@ def rent_tier(rent: float) -> str:
     if rent < 30_000: return "Mid Range"
     if rent < 70_000: return "Premium"
     return "Luxury"
+
 
 @app.get("/")
 def health_check():
